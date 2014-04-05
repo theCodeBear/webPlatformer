@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title> HTML5 Game </title>
+
+    <style type="text/css">
+        h1 {
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+
+    <script>
+
+/*                       VARIABLES AND OBJECT DEFINITIONS                        */
+        gravity = 1;
+
+        (function() {
+            var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+            window.requestAnimationFrame = requestAnimationFrame;
+        })();
+
+    // Drawable class
+        function Drawable(x, y, width,  height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.x2 = x + width;
+            this.y2 = y + height;
+        }
+
+    // Moveable class
+        function Moveable() {
+            this.velX = 0;
+            this.velY = 0;
+        }
+
+    // Player's Character class
+        function Player(x, y) {
+        // member variables
+            this.x = x;
+            this.y = y;
+            this.velX = 0;
+            this.velY = 0;
+            this.width = level.unitWidth;
+            this.height = level.unitHeight;
+            this.maxSpeed = 5;
+            this.moveL = false;
+            this.moveR = false;
+
+            this.x2 = x + this.width;
+            this.y2 = y + this.height;
+
+            // this.weight=2;
+
+        // member methods
+            this.meth = function() {
+                ;
+            }
+        }
+
+    // Canvas class
+        function Canvas() {
+            this.x = 0;
+            this.y = 0;
+            this.unitHeight = 25;
+            this.unitWidth = 25;
+            this.width = map[0].length*this.unitWidth;
+            this.height = map.length*this.unitHeight;
+        }
+
+
+
+        function Block(x, y, width, height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+
+            this.x2 = x + width;
+            this.y2 = y + height;
+        }
+
+
+/*                       KEY DETECTION                        */
+        document.onkeydown = function() {
+            if (event.keyCode == 37)    // left
+                play.moveL = true;
+            if (event.keyCode == 39)    // right
+                play.moveR = true;
+            if (event.keyCode == 32 && collideB ==true)     // jump
+                play.velY = -15;
+            if (event.keyCode == 16)    // running
+                play.maxSpeed = 10
+        }
+
+        document.onkeyup = function() {
+            if (event.keyCode == 37)    // stop moving left
+                play.moveL = false;
+            if (event.keyCode == 39)    // stop moving right
+                play.moveR = false;
+            if (event.keyCode == 16)    // stop running
+                play.maxSpeed = 5;
+        }
+
+
+/*                       LEVEL MAPS                        */
+        map = [
+"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww         wwww             w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                  wwww    w                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                         ww                                                       w",
+"w                          ww                          w                                                       w",
+"w                          ww                   www    w                                                       w",
+"w                          ww             w            w                                                       w",
+"w    wwww                  ww                                                                                  w",
+"w          www                                w                                                                w",
+"w               www                                                   www                                      w",
+"wggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggw",
+                ];
+
+
+/*                       INITIALIZATION                        */
+        function initializeCanvas() {
+            canvas = document.getElementById("Canvas");
+            c = canvas.getContext("2d");
+
+            c.save();
+            initializeObjects();
+            // collideDir="p";
+            update();
+        }
+
+        function initializeObjects() {
+            level = new Canvas();
+            play = new Player(400, 150);
+            walls = new Array();
+            createWalls();
+        }
+
+        function createWalls() {
+            var blockH = level.unitWidth;
+            var blockW = level.unitHeight;
+            var counter=0;
+            for (var row=0; row<map.length; row++) {
+                for (var col=0; col<map[row].length; col++) {
+                    if (map[row][col]=="w" || map[row][col]=="g") {
+                        walls.push(new Block(col*blockW, row*blockH, blockW, blockH));
+                    }
+                }
+            }
+        }
+
+
+/*                       MOVEMENT                        */
+        function move() {
+        // move left
+            if (play.moveL == true) {
+                if (play.velX > -play.maxSpeed)
+                    play.velX-=1;
+                else
+                    play.velX = -play.maxSpeed;
+            }
+        // move right
+            if (play.moveR == true) {
+                if (play.velX < play.maxSpeed)
+                    play.velX+=1;
+                else
+                    play.velX = play.maxSpeed;
+            }
+
+        // gravity
+            // if ()
+            play.velY += gravity;
+            // if (play.velY < gravity)
+            //     play.velY += play.weight;
+        // Friction:
+            if (!play.moveL && !play.moveR)
+                play.velX *= 0.75;
+
+        // keep player onscreen
+            if (play.x < 0)
+                play.x = 0;
+            if (play.x+play.width > level.width)
+                play.x = level.width-play.width;
+            if (play.y < 0)
+                play.y = 0;
+            if (play.y+play.height > canvas.height)
+                play.y = canvas.height-play.height;
+        }
+
+
+
+        function screenScroll() {
+            var transX = -play.velX;
+            var transY = -play.velY;
+        // translate canvas right when player right of 2/3 point on canvas
+            if (play.x+level.x > (2/3)*canvas.width && play.velX > 0 && -level.x+canvas.width < level.width) {
+                c.translate(transX, 0);
+                level.x += transX;
+        // translate canvas left when player left of 1/3 point on canvas
+            } else if (play.x+level.x < (1/3)*canvas.width && play.velX < 0 && level.x < 0) {
+                c.translate(transX, 0);
+                level.x += transX;
+            }
+        // translate canvas down when play below bottom 1/5 of canvas
+            // if (play.y+level.y > (4/5)*canvas.height && play.velY > 0 && -level.y+canvas.height < level.height) {
+            //     c.translate(0, transY)
+            //     level.y += transY;
+            // }
+
+        // to prevent overscrolling at left level edge
+            if (level.x > 0) {
+                c.restore();
+                c.save();
+                level.x=0;
+            }
+        // to prevent overscrolling at right level edge
+            if (-level.x + canvas.width > level.width) {
+                c.translate(-transX,0);
+                level.x-=transX;//(-level.width/3)+((1/3)*(2*level.unitWidth));//-=transX;
+            }
+        }
+
+
+/*                       PLAYER UPDATE                        */
+        function updatePlayer() {
+        // update player's position
+            play.x += play.velX;
+            play.y += play.velY;
+
+            play.x2 = play.x + play.width;
+            play.y2 = play.y + play.height;
+        }
+
+
+/*                       COLLISION DETECTION                        */
+        function checkWalls() {
+            document.getElementById("showme").innerHTML = "null";
+            collideB = false;
+            // var collideDir=null;
+            for (var i=0; i<walls.length; i++) {
+                if (Math.abs(play.x-walls[i].x) < level.unitWidth+5 && Math.abs(play.y-walls[i].y) < level.unitHeight+5) {
+                    collisionDetect(walls[i]);//, collideDir);
+                    // break;
+                }
+            }
+        }
+
+
+        function collisionDetect(aBlock) {
+ /*           var rCol = 100;
+            var lCol = 100;
+            var tCol = 100;
+            var bCol = 100;
+            var collideDir = null;
+        // horizontal collision
+            var horizAlign = (play.y2 > aBlock.y && play.y < aBlock.y2);
+        //collision on right
+            if (horizAlign && play.x2 > aBlock.x && play.x < aBlock.x) {
+                rCol = play.x2 - aBlock.x;
+                
+            }
+        // collision on left
+            if (horizAlign && play.x < aBlock.x2 && play.x2 > aBlock.x2) {
+                lCol = aBlock.x2 - play.x;
+                
+            }
+
+        // vertical collision
+            var vertAlign = (play.x2 > aBlock.x && play.x < aBlock.x2);
+        // collision above
+            if (vertAlign && play.y < aBlock.y2 && play.y2 > aBlock.y2) {
+                tCol = aBlock.y2 - play.y;
+                
+            }
+        // collision below
+            if (vertAlign && play.y2 >= aBlock.y+1 && play.y < aBlock.y) {
+                bCol = play.y2 - aBlock.y;
+                
+            }
+
+            var leastCol = Math.min(lCol, rCol, tCol, bCol, play.width, play.height);
+            if (leastCol == lCol)
+                play.x = aBlock.x2;
+            else if (leastCol == rCol)
+                play.x = aBlock.x-play.width;
+            else if (leastCol == tCol)
+                play.y = aBlock.y2;
+            else if (leastCol == bCol) {
+                play.y = aBlock.y-play.height;
+                collideDir="b";
+                gravity = 0;
+            }
+
+            if (collideDir != "b")
+                gravity = 1;
+
+
+            document.getElementById("showme").innerHTML = rCol +" " +lCol+" "+tCol+" "+bCol;
+*/
+
+
+        // check bottom collision if player moving down
+            if (play.velY > 0) {
+                if (play.x2 > aBlock.x && play.x < aBlock.x2 && play.y < aBlock.y) {
+                    play.velY = 0;
+                    play.y = aBlock.y-play.height;
+                    collideB = true;
+                }
+            }
+        // check top collision if player moving up
+            if (play.velY < 0) {
+                if (play.x2 > aBlock.x && play.x < aBlock.x2 && play.y > aBlock.y) {
+                    play.velY = 0;
+                    play.y = aBlock.y2;
+                }
+            }
+        // check right collision if player moving right
+            if (play.velX > 0) {
+                if (play.y2 > aBlock.y && play.y < aBlock.y2 && play.x < aBlock.x) {
+                    play.x = aBlock.x - play.width;
+                }
+            }
+        // check left collision if player moving left
+            if (play.velX < 0) {
+                if (play.y2 > aBlock.y && play.y < aBlock.y2 && play.x > aBlock.x) {
+                    play.x = aBlock.x2;
+                }
+            }
+
+
+
+           /* var dx = (play.x + (play.width/2)) - (aBlock.x + (aBlock.width/2));
+            var dy = (play.y + (play.height/2)) - (aBlock.y + (aBlock.height/2));
+            var combineHalfWidth = (play.width/2) + (aBlock.width/2);
+            var combineHalfHeight = (play.height/2) + (aBlock.height/2);
+        // if collision:
+            if (Math.abs(dx) < combineHalfWidth && Math.abs(dy) < combineHalfHeight) {
+            // left collision
+                if (dx > 0) {
+                    collideDir = "l";
+                    play.x = aBlock.x + aBlock.width;
+                    // play.x = play.lastX;
+                } 
+            // right collision
+                else if (dx < 0) {
+                    collideDir = "r";
+                    play.x = aBlock.x - play.width;
+                    // play.x = play.lastX;
+                }
+                if (play.velY != 0) {
+            // top collision
+                if (play.y < aBlock.y+aBlock.width) {//(dy > 0) {
+                    collideDir = "t";
+                    play.y = aBlock.y + aBlock.height;
+                    // play.y = play.lastY;
+                }
+            // bottom collision
+                else if (play.y+play.height > aBlock.y) {//(dy < 0) {
+                    collideDir = "b";
+                    play.y = aBlock.y - play.height;
+                    // play.y = play.lastY
+                }
+                }
+                // document.getElementById("showme").innerHTML="collide\n"+collideDir+"\n"+play.moveR+"\n";
+            }
+            else
+                collideDir = "n";*/
+        }
+
+
+/*                       DRAWING                        */
+        function draw() {
+        // clear current viewing area in level for re-rendering
+            c.clearRect(-level.x,-level.y,canvas.width, canvas.height);
+        // draw player's character
+            c.fillStyle = "blue";
+            c.fillRect(play.x, play.y, play.width, play.height);
+            c.fill();
+
+        // draw walls
+            var count=0;
+            for (var row=0; row<map.length; row++) {
+                for (var col=0; col<map[row].length; col++) {
+                // draw "w" walls
+                    if (map[row][col]=="w") {
+                        c.fillStyle="orange";
+                        c.fillRect(walls[count].x, walls[count].y, walls[count].width, walls[count++].height);
+                        c.fill();
+                // draw "g" walls
+                    } else if (map[row][col]=="g") {
+                        c.fillStyle = "green";
+                        c.fillRect(walls[count].x, walls[count].y, walls[count].width, walls[count++].height);
+                        c.fill();
+                    }
+                }
+            }
+            // document.getElementById("showme").innerHTML = collideDir+" "+play.moveR;
+        }
+
+
+/*                       UPDATE                        */
+        function update() {
+
+            move();     // move must come before draw
+            checkWalls();
+            draw();     // draw must come after move
+            
+            // play.lastX = play.x;
+            // play.lastY = play.y;
+
+            updatePlayer();
+            
+
+            screenScroll();
+            
+            document.getElementById("showme").innerHTML = play.velY+" "+play.y2+" "+play.y;
+
+            requestAnimationFrame(update);
+        }
+
+
+
+    </script>
+
+</head>
+<body onload="initializeCanvas();">
+    <h1> A game </h1>
+
+    <canvas id="Canvas" width="2000" height="600" style="border:2px solid black;"></canvas>
+    <div id="showme" style="position:fixed; left: 100px; top:900px; width:100px; height: 200px; background-color:lightblue; border: 2px solid red; color: black; font-size:3em;"> </div>
+</body>
+</html>
